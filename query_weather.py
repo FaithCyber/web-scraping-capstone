@@ -7,7 +7,7 @@ cursor = conn.cursor()
 cursor.execute("""
 SELECT *
 FROM clean_weather
-LIMIT 5
+LIMIT 10
 """)
 
 rows = cursor.fetchall()
