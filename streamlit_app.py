@@ -1,40 +1,69 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+import matplotlib.pyplot as plt
 
-st.title("Weather Dashboard")
+st.title("Weather Around The World Dashboard")
 
+st.write("""
+This dashboard displays weather data collected through web scraping,
+cleaned with Pandas, and stored in SQLite.
+""")
+
+# Connect to database
 conn = sqlite3.connect("weather.db")
+
 df = pd.read_sql_query(
     "SELECT * FROM clean_weather",
     conn
 )
+
 conn.close()
 
-st.subheader("Weather Data")
+st.subheader("Dataset Preview")
 st.dataframe(df)
 
-city = st.selectbox(
+# Sidebar filter
+city_column = df.columns[0]
+
+selected_city = st.sidebar.selectbox(
     "Select a City",
-    df["City"]
+    ["All"] + list(df[city_column].unique())
 )
 
-filtered = df[df["City"] == city]
+if selected_city != "All":
+    df = df[df[city_column] == selected_city]
 
-st.subheader("Selected City")
-st.dataframe(filtered)
+# Visualization 1
+st.subheader("Record Count")
 
-# Chart 1
-st.subheader("Temperature by City")
-plt.xticks(rotation=45)
-st.pyplot(fig)
+fig1, ax1 = plt.subplots()
 
-# Chart 2
-st.subheader("Temperature Distribution")
-fig2, ax2 = plt.subplots()
-ax2.hist(df["Temperature"])
-st.pyplot(fig2)
+df.groupby(city_column).size().plot(
+    kind="bar",
+    ax=ax1
+)
 
-# Chart 3
+st.pyplot(fig1)
+
+# Visualization 2
+st.subheader("Data Distribution")
+
+numeric_cols = df.select_dtypes(include="number").columns
+
+if len(numeric_cols) > 0:
+    selected_numeric = st.selectbox(
+        "Choose Numeric Column",
+        numeric_cols
+    )
+
+    fig2, ax2 = plt.subplots()
+
+    df[selected_numeric].hist(ax=ax2)
+
+    st.pyplot(fig2)
+
+# Visualization 3
 st.subheader("Summary Statistics")
-st.write(df.describe())
+
+st.write(df.describe(include="all"))
