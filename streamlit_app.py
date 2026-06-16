@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import matplotlib.pyplot as plt
+st.line_chart(df.set_index("City"))
 
 st.title("Weather Dashboard")
 
