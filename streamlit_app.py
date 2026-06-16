@@ -26,7 +26,6 @@ st.dataframe(filtered)
 
 # Chart 1
 st.subheader("Temperature by City")
-ax.bar(df["City"], df["Temperature"])
 plt.xticks(rotation=45)
 st.pyplot(fig)
 
