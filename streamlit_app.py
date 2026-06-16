@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import matplotlib.pyplot as plt
+
 
 st.title("Weather Dashboard")
 

@@ -18,7 +18,9 @@ cities = []
 temps = []
 
 try:
-    rows = driver.find_elements(By.CSS_SELECTOR, "table.zebra.tb-wt tbody tr")
+    rows = driver.find_elements(By.TAG_NAME, "tr")
+
+    print(f"Found {len(rows)} rows")
 
     for row in rows:
         try:
@@ -28,11 +30,11 @@ try:
             cities.append(city)
             temps.append(temp)
 
-        except:
+        except Exception:
             pass
 
 except Exception as e:
-    print(e)
+    print("Error:", e)
 
 driver.quit()
 
@@ -42,6 +44,7 @@ df = pd.DataFrame({
 })
 
 print(df.head())
+print(f"Total records: {len(df)}")
 
 df.to_csv("weather_data_raw.csv", index=False)
 
