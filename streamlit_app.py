@@ -114,7 +114,7 @@ else:
         # Summary Statistics
         st.subheader("📋 Summary Statistics")
         st.write(filtered_df.describe(include="all"))
-=======
+
 # Visualization 3
 st.subheader("Summary Statistics")
 
