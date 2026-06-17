@@ -31,6 +31,10 @@ else:
     city_col = "City" if "City" in df.columns else ("city" if "city" in df.columns else df.columns[0])
     temp_col = "Temperature" if "Temperature" in df.columns else ("temperature" if "temperature" in df.columns else df.columns[1])
 
+    # Force Temperature column to be completely numeric just in case text data snuck in
+    df[temp_col] = pd.to_numeric(df[temp_col], errors='coerce')
+    df = df.dropna(subset=[temp_col])
+
     # --- USER INTERACTIONS (Sidebar Layout) ---
     st.sidebar.header("Filter Options")
     
@@ -57,6 +61,10 @@ else:
         (df[temp_col] <= selected_temp_range[1])
     ].copy()
 
+    # CRITICAL BULLETPROOF FIX: Reset the index and drop old tracking numbers
+    # This prevents Plotly's underlying groupby engine from encountering mismatched index lookups
+    filtered_df = filtered_df.reset_index(drop=True)
+
     # --- DASHBOARD LAYOUT & VISUALIZATIONS ---
     with st.expander("🔍 View Raw Dataset Preview"):
         st.dataframe(filtered_df)
@@ -68,38 +76,34 @@ else:
 
         with col1:
             st.subheader("📊 Temperature by City")
-            # PASS DATA DIRECTLY: This completely prevents Plotly KeyErrors
+            # Passing clean strings as names with a completely freshly indexed DataFrame
             fig1 = px.bar(
                 filtered_df, 
-                x=filtered_df[city_col],      
-                y=filtered_df[temp_col],      
-                color=filtered_df[city_col],  
+                x=city_col,      
+                y=temp_col,      
+                color=city_col,  
                 title="Temperature Comparison"
             )
-            # Fix labels so they look clean on the dashboard
-            fig1.update_layout(xaxis_title="City", yaxis_title="Temperature")
             st.plotly_chart(fig1, use_container_width=True)
 
         with col2:
             st.subheader("🌡️ Temperature Distribution")
             fig2 = px.histogram(
                 filtered_df, 
-                x=filtered_df[temp_col],      
+                x=temp_col,      
                 title="Overall Temperature Spread",
                 nbins=10
             )
-            fig2.update_layout(xaxis_title="Temperature", yaxis_title="Count")
             st.plotly_chart(fig2, use_container_width=True)
 
         st.subheader("📍 Temperature Scatter Plot")
         fig3 = px.scatter(
             filtered_df, 
-            x=filtered_df[city_col],          
-            y=filtered_df[temp_col],          
-            color=filtered_df[city_col],      
+            x=city_col,          
+            y=temp_col,          
+            color=city_col,      
             title="City vs Temperature Plot"
         )
-        fig3.update_layout(xaxis_title="City", yaxis_title="Temperature")
         st.plotly_chart(fig3, use_container_width=True)
 
         st.subheader("📋 Summary Statistics")
