@@ -4,12 +4,11 @@ import sqlite3
 import plotly.express as px
 import os
 
-<<<<<<< HEAD
+
 # Set page config for a cleaner layout
 st.set_page_config(page_title="Weather Dashboard", layout="wide")
-=======
+
 st.title("Weather Around The World Dashboard")
->>>>>>> 84acb3b23080bb9b9538c7a04c3260fce02735a9
 
 st.title("🌐 Weather Around The World Dashboard")
 
