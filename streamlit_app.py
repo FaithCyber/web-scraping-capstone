@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.title("Weather Around The World Dashboard")
 
