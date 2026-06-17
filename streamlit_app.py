@@ -9,6 +9,11 @@ st.set_page_config(page_title="Weather Dashboard", layout="wide")
 
 st.title("🌐 Weather Around The World Dashboard")
 
+st.markdown("""
+This dashboard displays weather data collected through web scraping,
+cleaned with Pandas, and stored in SQLite. Use the filters below to explore the data.
+""")
+
 # Connect to database securely
 DB_FILE = "weather.db"
 
@@ -19,21 +24,12 @@ else:
     df = pd.read_sql_query("SELECT * FROM clean_weather", conn)
     conn.close()
 
-    # --- DEBUGGING SECTION ---
-    # This will print out exactly what columns Pandas sees in your database
-    st.write("### 🔍 Database Column Debugging")
-    st.write("Your actual database columns are:", list(df.columns))
-    
-    # Let's clean column names by stripping any hidden spaces and matching capitalization
-    # This automatically forces columns to match what our script expects if it's just a spacing issue
+    # Clean up column names right away to prevent spacing errors
     df.columns = df.columns.str.strip()
     
-    # --- AUTOMATIC COLUMN DETECTION ---
-    # This checks if your database uses lower-case names and adjusts them dynamically
+    # Track the correct column names dynamically
     city_col = "City" if "City" in df.columns else ("city" if "city" in df.columns else df.columns[0])
     temp_col = "Temperature" if "Temperature" in df.columns else ("temperature" if "temperature" in df.columns else df.columns[1])
-
-    st.write(f"Using column **'{city_col}'** for Cities and **'{temp_col}'** for Temperature.")
 
     # --- USER INTERACTIONS (Sidebar Layout) ---
     st.sidebar.header("Filter Options")
@@ -54,14 +50,14 @@ else:
         value=(min_temp, max_temp)
     )
 
-    # Apply the filters  using our detected column names
+    # Apply the filters dynamically using our detected column names
     filtered_df = df[
         (df[city_col].isin(selected_cities)) & 
         (df[temp_col] >= selected_temp_range[0]) & 
         (df[temp_col] <= selected_temp_range[1])
-    ]
+    ].copy()
 
-    # -DASHBOARD LAYOUT VISUALIZATIONS 
+    # --- DASHBOARD LAYOUT & VISUALIZATIONS ---
     with st.expander("🔍 View Raw Dataset Preview"):
         st.dataframe(filtered_df)
 
@@ -72,33 +68,38 @@ else:
 
         with col1:
             st.subheader("📊 Temperature by City")
+            # PASS DATA DIRECTLY: This completely prevents Plotly KeyErrors
             fig1 = px.bar(
                 filtered_df, 
-                x=city_col,      
-                y=temp_col,      
-                color=city_col,  
+                x=filtered_df[city_col],      
+                y=filtered_df[temp_col],      
+                color=filtered_df[city_col],  
                 title="Temperature Comparison"
             )
+            # Fix labels so they look clean on the dashboard
+            fig1.update_layout(xaxis_title="City", yaxis_title="Temperature")
             st.plotly_chart(fig1, use_container_width=True)
 
         with col2:
             st.subheader("🌡️ Temperature Distribution")
             fig2 = px.histogram(
                 filtered_df, 
-                x=temp_col,      # <-- Dynamic Column Name
+                x=filtered_df[temp_col],      
                 title="Overall Temperature Spread",
                 nbins=10
             )
+            fig2.update_layout(xaxis_title="Temperature", yaxis_title="Count")
             st.plotly_chart(fig2, use_container_width=True)
 
         st.subheader("📍 Temperature Scatter Plot")
         fig3 = px.scatter(
             filtered_df, 
-            x=city_col,          
-            y=temp_col,     
-            color=city_col,     
+            x=filtered_df[city_col],          
+            y=filtered_df[temp_col],          
+            color=filtered_df[city_col],      
             title="City vs Temperature Plot"
         )
+        fig3.update_layout(xaxis_title="City", yaxis_title="Temperature")
         st.plotly_chart(fig3, use_container_width=True)
 
         st.subheader("📋 Summary Statistics")
