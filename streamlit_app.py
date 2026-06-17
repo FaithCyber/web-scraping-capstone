@@ -4,11 +4,8 @@ import sqlite3
 import plotly.express as px
 import os
 
-
 # Set page config for a cleaner layout
 st.set_page_config(page_title="Weather Dashboard", layout="wide")
-
-st.title("Weather Around The World Dashboard")
 
 st.title("🌐 Weather Around The World Dashboard")
 
@@ -35,7 +32,7 @@ else:
     selected_cities = st.sidebar.multiselect(
         "Select Cities to Compare",
         options=all_cities,
-        default=all_cities[:5] if len(all_cities) > 5 else all_cities # defaults to first 5 cities
+        default=all_cities[:5] if len(all_cities) > 5 else all_cities
     )
 
     # 2. Slider Filter (e.g., Temperature Range)
@@ -61,10 +58,9 @@ else:
     with st.expander("🔍 View Raw Dataset Preview"):
         st.dataframe(filtered_df)
 
-
-    # If the filters return empty data, handle it gracefully
+    # CRITICAL FIX: Only build charts if we have data!
     if filtered_df.empty:
-        st.warning("No data matches the selected filters. Please adjust your selections in the sidebar.")
+        st.warning("⚠️ No data matches the selected filters. Please adjust your selections or add more cities in the sidebar!")
     else:
         # Layout components side-by-side using columns
         col1, col2 = st.columns(2)
@@ -73,7 +69,7 @@ else:
             # Visualization 1: Dynamic Bar Chart
             st.subheader("📊 Temperature by City")
             fig1 = px.bar(
-                filtered_df, # <-- Uses filtered data
+                filtered_df, 
                 x="City",
                 y="Temperature",
                 color="City",
@@ -85,7 +81,7 @@ else:
             # Visualization 2: Dynamic Histogram
             st.subheader("🌡️ Temperature Distribution")
             fig2 = px.histogram(
-                filtered_df, # <-- Uses filtered data
+                filtered_df, 
                 x="Temperature",
                 title="Overall Temperature Spread",
                 nbins=10
@@ -95,14 +91,13 @@ else:
         # Visualization 3: Dynamic Scatter Plot (Takes full width below columns)
         st.subheader("📍 Temperature Scatter Plot")
         
-        # If your scraper captured Humidity or Wind Speed, replacing 'Temperature' 
-        # on the Y-axis would make this scatter plot even more insightful!
+        # Checking if your scraper captured Humidity to make the scatter plot more insightful
         y_axis_feature = "Temperature" 
         if "Humidity" in filtered_df.columns:
             y_axis_feature = "Humidity"
             
         fig3 = px.scatter(
-            filtered_df, # <-- Uses filtered data
+            filtered_df, 
             x="City",
             y=y_axis_feature,
             color="City",
@@ -114,9 +109,4 @@ else:
         # Summary Statistics
         st.subheader("📋 Summary Statistics")
         st.write(filtered_df.describe(include="all"))
-
-# Visualization 3
-st.subheader("Summary Statistics")
-
-st.write(df.describe(include="all"))
 
