@@ -61,7 +61,7 @@ else:
     with st.expander("🔍 View Raw Dataset Preview"):
         st.dataframe(filtered_df)
 
-<<<<<<< HEAD
+
     # If the filters return empty data, handle it gracefully
     if filtered_df.empty:
         st.warning("No data matches the selected filters. Please adjust your selections in the sidebar.")
@@ -119,4 +119,4 @@ else:
 st.subheader("Summary Statistics")
 
 st.write(df.describe(include="all"))
->>>>>>> 84acb3b23080bb9b9538c7a04c3260fce02735a9
+
