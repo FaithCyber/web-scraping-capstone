@@ -1,17 +1,16 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import plotly.express as px
 import os
 
-# Set page config for a cleaner layout
+# Set page config for a cleaner, wide layout
 st.set_page_config(page_title="Weather Dashboard", layout="wide")
 
 st.title("🌐 Weather Around The World Dashboard")
 
 st.markdown("""
 This dashboard displays weather data collected through web scraping,
-cleaned with Pandas, and stored in SQLite. Use the filters below to explore the data.
+cleaned with Pandas, and stored in SQLite. Use the sidebar filters below to explore the data.
 """)
 
 # Connect to database securely
@@ -24,20 +23,21 @@ else:
     df = pd.read_sql_query("SELECT * FROM clean_weather", conn)
     conn.close()
 
-    # Clean up column names right away to prevent spacing errors
+    # Clean up column names right away to prevent invisible spacing errors
     df.columns = df.columns.str.strip()
     
-    # Track the correct column names dynamically
+    # Track the correct column names dynamically (handles uppercase/lowercase variations)
     city_col = "City" if "City" in df.columns else ("city" if "city" in df.columns else df.columns[0])
     temp_col = "Temperature" if "Temperature" in df.columns else ("temperature" if "temperature" in df.columns else df.columns[1])
 
-    # Force Temperature column to be completely numeric just in case text data snuck in
+    # Ensure Temperature column is fully numeric for filtering and calculations
     df[temp_col] = pd.to_numeric(df[temp_col], errors='coerce')
     df = df.dropna(subset=[temp_col])
 
     # --- USER INTERACTIONS (Sidebar Layout) ---
     st.sidebar.header("Filter Options")
     
+    # 1. Dropdown/Multi-select filter for Cities
     all_cities = sorted(df[city_col].unique())
     selected_cities = st.sidebar.multiselect(
         "Select Cities to Compare",
@@ -45,6 +45,7 @@ else:
         default=all_cities[:5] if len(all_cities) > 5 else all_cities
     )
 
+    # 2. Slider filter for Temperature Range
     min_temp = float(df[temp_col].min())
     max_temp = float(df[temp_col].max())
     selected_temp_range = st.sidebar.slider(
@@ -54,58 +55,44 @@ else:
         value=(min_temp, max_temp)
     )
 
-    # Apply the filters dynamically using our detected column names
+    # Apply filters dynamically
     filtered_df = df[
         (df[city_col].isin(selected_cities)) & 
         (df[temp_col] >= selected_temp_range[0]) & 
         (df[temp_col] <= selected_temp_range[1])
     ].copy()
 
-    # CRITICAL BULLETPROOF FIX: Reset the index and drop old tracking numbers
-    # This prevents Plotly's underlying groupby engine from encountering mismatched index lookups
-    filtered_df = filtered_df.reset_index(drop=True)
-
     # --- DASHBOARD LAYOUT & VISUALIZATIONS ---
+    
+    # Dataset Preview Section (Expandable component)
     with st.expander("🔍 View Raw Dataset Preview"):
-        st.dataframe(filtered_df)
+        st.dataframe(filtered_df, use_container_width=True)
 
     if filtered_df.empty:
         st.warning("⚠️ No data matches the selected filters. Please adjust your selections in the sidebar!")
     else:
+        # Layout components side-by-side using columns
         col1, col2 = st.columns(2)
 
         with col1:
+            # Visualization 1: Interactive Bar Chart
             st.subheader("📊 Temperature by City")
-            # Passing clean strings as names with a completely freshly indexed DataFrame
-            fig1 = px.bar(
-                filtered_df, 
-                x=city_col,      
-                y=temp_col,      
-                color=city_col,  
-                title="Temperature Comparison"
-            )
-            st.plotly_chart(fig1, use_container_width=True)
+            # We set the index to City so the bar chart uses cities as labels
+            chart1_data = filtered_df[[city_col, temp_col]].set_index(city_col)
+            st.bar_chart(chart1_data, use_container_width=True)
 
         with col2:
-            st.subheader("🌡️ Temperature Distribution")
-            fig2 = px.histogram(
-                filtered_df, 
-                x=temp_col,      
-                title="Overall Temperature Spread",
-                nbins=10
-            )
-            st.plotly_chart(fig2, use_container_width=True)
+            # Visualization 2: Temperature Distribution Trend
+            st.subheader("🌡️ Temperature Trends")
+            chart2_data = filtered_df[[city_col, temp_col]].set_index(city_col)
+            st.line_chart(chart2_data, use_container_width=True)
 
-        st.subheader("📍 Temperature Scatter Plot")
-        fig3 = px.scatter(
-            filtered_df, 
-            x=city_col,          
-            y=temp_col,          
-            color=city_col,      
-            title="City vs Temperature Plot"
-        )
-        st.plotly_chart(fig3, use_container_width=True)
+        # Visualization 3: Area Map or Spread Plot (Takes full width below columns)
+        st.subheader("📈 Overall Data Profile Plot")
+        chart3_data = filtered_df[[temp_col]].copy()
+        st.area_chart(chart3_data, use_container_width=True)
 
+        # Summary Statistics
         st.subheader("📋 Summary Statistics")
         st.write(filtered_df.describe(include="all"))
-
+     
