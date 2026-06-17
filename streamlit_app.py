@@ -4,8 +4,12 @@ import sqlite3
 import plotly.express as px
 import os
 
+<<<<<<< HEAD
 # Set page config for a cleaner layout
 st.set_page_config(page_title="Weather Dashboard", layout="wide")
+=======
+st.title("Weather Around The World Dashboard")
+>>>>>>> 84acb3b23080bb9b9538c7a04c3260fce02735a9
 
 st.title("🌐 Weather Around The World Dashboard")
 
@@ -58,6 +62,7 @@ else:
     with st.expander("🔍 View Raw Dataset Preview"):
         st.dataframe(filtered_df)
 
+<<<<<<< HEAD
     # If the filters return empty data, handle it gracefully
     if filtered_df.empty:
         st.warning("No data matches the selected filters. Please adjust your selections in the sidebar.")
@@ -110,3 +115,9 @@ else:
         # Summary Statistics
         st.subheader("📋 Summary Statistics")
         st.write(filtered_df.describe(include="all"))
+=======
+# Visualization 3
+st.subheader("Summary Statistics")
+
+st.write(df.describe(include="all"))
+>>>>>>> 84acb3b23080bb9b9538c7a04c3260fce02735a9
